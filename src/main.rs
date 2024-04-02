@@ -8,6 +8,8 @@ fn main() {
         println!("2: Decode from Base64 to ASCII");
         println!("3: Encode to Binary from ASCII");
         println!("4: Decode from Binary to ASCII");
+        println!("5: Encode to Hex from ASCII");
+        println!("6: Decode from Hex to ASCII");
         println!("exit: Exit");
         println!();
 
@@ -34,19 +36,32 @@ fn main() {
             }
             "3" => {
                 let input = read_input("Enter the ASCII string to encode to Binary: ");
-                let binary_encoded = input.bytes()
-                               .map(|b| format!("{:08b}", b))
-                               .collect::<Vec<String>>()
-                               .join(" ");
+                let binary_encoded = input
+                    .bytes()
+                    .map(|b| format!("{:08b}", b))
+                    .collect::<Vec<String>>()
+                    .join(" ");
                 println_with_padding(&format!("Encoded to Binary: {}", binary_encoded));
-            },
+            }
             "4" => {
                 let input = read_input("Enter the Binary string to decode into ASCII: ");
                 match binary_to_ascii(&input) {
-                Ok(decoded) => println_with_padding(&format!("Decoded to ASCII: {}", decoded)),
-                Err(e) => println_with_padding(&format!("Error: {}", e)),
-    }
-            },
+                    Ok(decoded) => println_with_padding(&format!("Decoded to ASCII: {}", decoded)),
+                    Err(e) => println_with_padding(&format!("Error: {}", e)),
+                }
+            }
+            "5" => {
+                let input = read_input("Enter the ASCII string to encode to Hex: ");
+                let hex_encoded = ascii_to_hex(&input);
+                println_with_padding(&format!("Encoded to Hex: {}", hex_encoded));
+            }
+            "6" => {
+                let input = read_input("Enter the Hex string to decode into ASCII: ");
+                match hex_to_ascii(&input) {
+                    Ok(decoded) => println_with_padding(&format!("Decoded to ASCII: {}", decoded)),
+                    Err(e) => println_with_padding(&format!("Error: {}", e)),
+                }
+            }
             "exit" => {
                 println!("Exiting...");
                 break;
@@ -55,8 +70,6 @@ fn main() {
         }
     }
 }
-
-
 
 fn read_input(prompt: &str) -> String {
     print!("{}", prompt);
@@ -68,18 +81,32 @@ fn read_input(prompt: &str) -> String {
     input.trim().to_string()
 }
 
-
-
 fn println_with_padding(content: &str) {
     println!("\n{}\n", content);
 }
 
-
-
 fn binary_to_ascii(s: &str) -> Result<String, &'static str> {
     s.split(' ')
-     .map(|byte_str| u8::from_str_radix(byte_str, 2))
-     .collect::<Result<Vec<u8>, _>>()
-     .map_err(|_| "Failed to parse binary to ASCII")
-     .and_then(|bytes| String::from_utf8(bytes).map_err(|_| "Failed to convert bytes to ASCII"))
+        .map(|byte_str| u8::from_str_radix(byte_str, 2))
+        .collect::<Result<Vec<u8>, _>>()
+        .map_err(|_| "Failed to parse binary to ASCII")
+        .and_then(|bytes| String::from_utf8(bytes).map_err(|_| "Failed to convert bytes to ASCII"))
+}
+
+fn hex_to_ascii(input: &str) -> Result<String, &'static str> {
+    (0..input.len())
+        .step_by(3) // Considering there's a space between each hex byte representation.
+        .map(|i| u8::from_str_radix(&input[i..i + 2], 16))
+        .collect::<Result<Vec<u8>, _>>()
+        .map_err(|_| "Failed to parse hex to ASCII")
+        .and_then(|bytes| String::from_utf8(bytes).map_err(|_| "Failed to convert bytes to ASCII"))
+}
+
+fn ascii_to_hex(input: &str) -> String {
+    input
+        .as_bytes()
+        .iter()
+        .map(|&b| format!("{:02x}", b))
+        .collect::<Vec<String>>()
+        .join(" ")
 }
