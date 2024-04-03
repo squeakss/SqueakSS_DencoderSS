@@ -3,6 +3,7 @@ use std::io::{self, Write};
 
 fn main() {
     loop {
+        println!();
         println!("Available options:");
         println!("1: Encode to Base64 from ASCII");
         println!("2: Decode from Base64 to ASCII");
@@ -10,6 +11,7 @@ fn main() {
         println!("4: Decode from Binary to ASCII");
         println!("5: Encode to Hex from ASCII");
         println!("6: Decode from Hex to ASCII");
+        println!("Rot: Rotate a-z 1-25 times");
         println!("exit: Exit");
         println!();
 
@@ -62,8 +64,21 @@ fn main() {
                     Err(e) => println_with_padding(&format!("Error: {}", e)),
                 }
             }
+            "Rot" => {
+                let mut ciphertext = String::new();
+                println_with_padding("What's the string?");
+                io::stdin()
+                .read_line(&mut ciphertext)
+                .expect("Failed to read line");
+                ciphertext = ciphertext.trim_end().to_string();
+
+                for shift in 1..=25 {
+                let decrypted_message = Rotation(&ciphertext, shift);
+                println!("Shift {}: {}", shift, decrypted_message);
+                }
+            }
             "exit" => {
-                println!("Exiting...");
+                println_with_padding("Exiting...");
                 break;
             }
             _ => println_with_padding("Yuh fuckin dummy."),
@@ -109,4 +124,20 @@ fn ascii_to_hex(input: &str) -> String {
         .map(|&b| format!("{:02x}", b))
         .collect::<Vec<String>>()
         .join(" ")
+}
+
+fn Rotation(ciphertext: &str, shift: u8) -> String {
+    ciphertext
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphabetic() {
+                let first = if c.is_ascii_lowercase() { 'a' } else { 'A' } as u8;
+                let offset = c as u8 - first;
+                let new_offset = (offset + (26 - shift) % 26) % 26;
+                (first + new_offset) as char
+            } else {
+                c
+            }
+        })
+        .collect()
 }
