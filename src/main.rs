@@ -2,7 +2,9 @@ use base64::{decode, encode};
 use md5::compute;
 use rand::Rng;
 use std::fs;
-use std::io::{self, Write};
+use std::io::{self, Write, BufRead, BufReader};
+use std::fs::File;
+use std::path::Path;
 
 fn main() {
     println!("                              _                       __");
@@ -80,14 +82,14 @@ fn main() {
         //Start matching
 
         match choice.trim() {
-            "1" => {
+            "s1" => {
                 println!();
                 let input = read_input("Enter the ASCII string to encode to Base64: ");
                 let encoded = encode(input);
                 println_with_padding(&format!("Encoded: {}", encoded));
                 println!("___________________________________________________________________________________________");
             }
-            "2" => {
+            "s2" => {
                 println!();
                 let input = read_input("Enter the Base64 string to decode into ASCII: ");
                 match decode(&input) {
@@ -99,7 +101,7 @@ fn main() {
                 }
                 println!("___________________________________________________________________________________________");
             }
-            "3" => {
+            "s3" => {
                 println!();
                 let input = read_input("Enter the ASCII string to encode to Binary: ");
                 let binary_encoded = input
@@ -110,7 +112,7 @@ fn main() {
                 println_with_padding(&format!("Encoded to Binary: {}", binary_encoded));
                 println!("___________________________________________________________________________________________");
             }
-            "4" => {
+            "s4" => {
                 println!();
                 let input = read_input("Enter the Binary string to decode into ASCII: ");
                 match binary_to_ascii(&input) {
@@ -119,14 +121,14 @@ fn main() {
                 }
                 println!("___________________________________________________________________________________________");
             }
-            "5" => {
+            "s5" => {
                 println!();
                 let input = read_input("Enter the ASCII string to encode to Hex: ");
                 let hex_encoded = ascii_to_hex(&input);
                 println_with_padding(&format!("Encoded to Hex: {}", hex_encoded));
                 println!("___________________________________________________________________________________________");
             }
-            "6" => {
+            "s6" => {
                 println!();
                 let input = read_input("Enter the Hex string to decode into ASCII: ");
                 match hex_to_ascii(&input) {
@@ -135,7 +137,7 @@ fn main() {
                 }
                 println!("___________________________________________________________________________________________");
             }
-            "7" => {
+            "s7" => {
                 println!();
                 let input = read_input("Enter the Binary string to decode into Hex: ");
                 match binary_to_hex(&input) {
@@ -146,7 +148,7 @@ fn main() {
                 }
                 println!("___________________________________________________________________________________________");
             }
-            "8" => {
+            "s8" => {
                 println!();
                 let input = read_input("Enter the Hex string to encode to Binary: ");
                 match hex_to_binary(&input) {
@@ -157,18 +159,23 @@ fn main() {
                 }
                 println!("___________________________________________________________________________________________");
             }
-            "MD5" => {
+            "f1" => {
+                println!("Enter the file path:");
+                let mut path = String::new();
+                io::stdin().read_line(&mut path).expect("Failed to read path");
+                let path = Path::new(path.trim());
+                process_file_lines(path);
+            }
+            "sMD5" => {
                 println!();
                 let input = read_input("Enter the string to hash with MD5: ");
                 let hash = create_md5_hash(&input);
                 println_with_padding(&format!("MD5 Hash: {}", hash));
                 println!("___________________________________________________________________________________________");
             }
-            "Rot" => {
-                println!(); // You can keep this if you want to maintain the empty line before the prompt
+            "sRot" => {
+                println!(); 
                 let mut ciphertext = String::new();
-
-                // Adjusted to print on the same line and flush stdout
                 print!("What's the string? ");
                 io::stdout().flush().unwrap(); // Flush stdout to make sure the prompt is shown immediately
 
@@ -218,6 +225,38 @@ fn read_input(prompt: &str) -> String {
         .read_line(&mut input)
         .expect("Failed to read line");
     input.trim().to_string()
+}
+
+fn process_file_lines(input_path: &Path) -> io::Result<()> {
+    let input_file = File::open(input_path)?;
+    let reader = BufReader::new(input_file);
+
+    println!("Do you want to save the results to a file? (yes/no)");
+    let mut answer = String::new();
+    io::stdin().read_line(&mut answer)?;
+
+    let output_method = answer.trim().to_lowercase();
+
+    let mut output_file = if output_method == "yes" {
+        println!("Enter the output file path:");
+        let mut output_path = String::new();
+        io::stdin().read_line(&mut output_path)?;
+        Some(File::create(output_path.trim())?)
+    } else {
+        None
+    };
+
+    for line in reader.lines() {
+        let line = line?;
+        let hex_output = ascii_to_hex(&line);
+        if let Some(file) = output_file.as_mut() {
+            writeln!(file, "{}:{}", line, hex_output)?;
+        } else {
+            println!("{}:{}", line, hex_output);
+        }
+    }
+
+    Ok(())
 }
 
 fn read_from_file(path: &str) -> Result<String, io::Error> {
@@ -276,13 +315,13 @@ fn hex_to_binary(input: &str) -> Result<String, &'static str> {
 }
 
 fn ascii_to_hex(input: &str) -> String {
-    input
-        .as_bytes()
-        .iter()
-        .map(|&b| format!("{:02x}", b))
-        .collect::<Vec<String>>()
-        .join(" ")
+    input.as_bytes()
+         .iter()
+         .map(|b| format!("{:02x}", b))
+         .collect::<Vec<String>>()
+         .join(" ")
 }
+
 
 fn create_md5_hash(input: &str) -> String {
     let digest = md5::compute(input);
