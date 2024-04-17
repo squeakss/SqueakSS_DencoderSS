@@ -1,10 +1,9 @@
 use base64::{decode, encode};
-use md5::compute;
-use rand::Rng;
 use std::fs;
-use std::io::{self, Write, BufRead, BufReader};
 use std::fs::File;
+use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
+use std::{thread, time};
 
 fn main() {
     println!("                              _                       __");
@@ -49,28 +48,33 @@ fn main() {
     println!("\\__/\\__, |\\__,_|\\___|\\__,_|_|\\_\\__/\\__/___/___,' \\___|_| |_|\\___\\___/ \\__,_|\\___|_|  |___/");
     println!("       |_|                            |_____|                                              ");
 
-    loop {
-        println!();
-        println!("Input Types:");
-        println!("s: String as input");
-        println!("f: File as input line by line");
-        println!("-----------------------------");
-        println!("Available Modules:");
-        println!("1: ASCII to Base64");
-        println!("2: Base64 to ASCII");
-        println!("3: ASCII to Binary");
-        println!("4: Binary to ASCII");
-        println!("5: ASCII to Hex");
-        println!("6: Hex to ASCII");
-        println!("7: Binary to Hex");
-        println!("8: Hex to Binary");
-        println!("MD5: String to MD5");
-        println!("Rot: Rotate a-z 1-25 times");
-        println!("-----------------------------");
-        println!("help: Syntax example");
-        println!("exit: Exit");
-        println!();
+    pause_with_delay();
 
+    println!();
+    println!("Input Types:");
+    println!("s: String as input");
+    println!("l: List as input");
+    println!("-----------------------------");
+    println!("Available Modules:");
+    println!("1: ASCII to Base64");
+    println!("2: Base64 to ASCII");
+    println!("3: ASCII to Binary");
+    println!("4: Binary to ASCII");
+    println!("5: ASCII to Hex");
+    println!("6: Hex to ASCII");
+    println!("7: Binary to Hex");
+    println!("8: Hex to Binary");
+    println!("9: URL encode");
+    println!("10: URL decode");
+    println!("11: Charcode encode");
+    println!("12: Charcode decode");
+    println!("Rot: Rotate a-z 1-25 times");
+    println!("-----------------------------");
+    println!("help: Syntax example");
+    println!("exit: Exit");
+    println!();
+
+    loop {
         let mut choice = String::new();
         print!("Enter the input type appended by the desired module:");
         io::stdout().flush().unwrap(); // Ensure "Enter your choice: " is printed before reading input
@@ -88,6 +92,7 @@ fn main() {
                 let encoded = encode(input);
                 println_with_padding(&format!("Encoded: {}", encoded));
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s2" => {
                 println!();
@@ -100,6 +105,7 @@ fn main() {
                     Err(_) => println_with_padding("Failed to decode Base64."),
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s3" => {
                 println!();
@@ -111,6 +117,7 @@ fn main() {
                     .join(" ");
                 println_with_padding(&format!("Encoded to Binary: {}", binary_encoded));
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s4" => {
                 println!();
@@ -120,6 +127,7 @@ fn main() {
                     Err(e) => println_with_padding(&format!("Error: {}", e)),
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s5" => {
                 println!();
@@ -127,6 +135,7 @@ fn main() {
                 let hex_encoded = ascii_to_hex(&input);
                 println_with_padding(&format!("Encoded to Hex: {}", hex_encoded));
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s6" => {
                 println!();
@@ -136,6 +145,7 @@ fn main() {
                     Err(e) => println_with_padding(&format!("Error: {}", e)),
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s7" => {
                 println!();
@@ -147,6 +157,7 @@ fn main() {
                     Err(e) => println_with_padding(&format!("Error: {}", e)),
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "s8" => {
                 println!();
@@ -158,23 +169,61 @@ fn main() {
                     Err(e) => println_with_padding(&format!("Error: {}", e)),
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
-            "f1" => {
+            "s9" => {
+                println!();
+                let input = read_input("Enter the string to URL encode: ");
+                println!();
+                let encoded = url_encode(&input);
+                println!("Encoded URL: {}", encoded);
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "s10" => {
+                println!();
+                let input = read_input("Enter the URL-encoded string to decode: ");
+                println!();
+                match url_decode(&input) {
+                    Ok(decoded) => println!("Decoded URL: {}", decoded),
+                    Err(err) => println!("Error decoding URL: {}", err),
+                }
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "s11" => {
+                println!();
+                let input = read_input("Enter the string to convert to charcodes: ");
+                println!();
+                let charcodes = string_to_charcodes(&input);
+                println!("Charcodes: {}", charcodes);
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "s12" => {
+                println!();
+                let input = read_input("Enter charcodes to convert to string: ");
+                println!();
+                match charcodes_to_string(&input) {
+                    Ok(string) => println!("String: {}", string),
+                    Err(e) => println!("Error: {}", e),
+                }
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "l1" => {
                 println!("Enter the file path:");
                 let mut path = String::new();
-                io::stdin().read_line(&mut path).expect("Failed to read path");
+                io::stdin()
+                    .read_line(&mut path)
+                    .expect("Failed to read path");
                 let path = Path::new(path.trim());
                 process_file_lines(path);
-            }
-            "sMD5" => {
-                println!();
-                let input = read_input("Enter the string to hash with MD5: ");
-                let hash = create_md5_hash(&input);
-                println_with_padding(&format!("MD5 Hash: {}", hash));
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "sRot" => {
-                println!(); 
+                println!();
                 let mut ciphertext = String::new();
                 print!("What's the string? ");
                 io::stdout().flush().unwrap(); // Flush stdout to make sure the prompt is shown immediately
@@ -191,6 +240,7 @@ fn main() {
                     println!();
                 }
                 println!("___________________________________________________________________________________________");
+                println!();
             }
             "help" => {
                 println!();
@@ -198,6 +248,29 @@ fn main() {
                 println!("'f1' will read lines from a file and convert each ASCII line to Base64");
                 println!("'fMD5' will read lines from a file and run them through the MD5 hashing algorithm");
                 println!("___________________________________________________________________________________________");
+                println!("Input Types:");
+                println!("s: String as input");
+                println!("f: File as input line by line");
+                println!("-----------------------------");
+                println!("Available Modules:");
+                println!("1: ASCII to Base64");
+                println!("2: Base64 to ASCII");
+                println!("3: ASCII to Binary");
+                println!("4: Binary to ASCII");
+                println!("5: ASCII to Hex");
+                println!("6: Hex to ASCII");
+                println!("7: Binary to Hex");
+                println!("8: Hex to Binary");
+                println!("9: URL encode");
+                println!("10: URL decode");
+                println!("11: Charcode encode");
+                println!("12: Charcode decode");
+                println!("Rot: Rotate a-z 1-25 times");
+                println!("-----------------------------");
+                println!("help: Syntax example");
+                println!("exit: Exit");
+                println!("___________________________________________________________________________________________");
+                println!();
             }
             "exit" => {
                 println!();
@@ -217,6 +290,10 @@ fn main() {
 //start of functions
 //start of functions
 
+fn pause_with_delay() {
+    let pause_time = time::Duration::from_secs(3);  // x seconds
+    thread::sleep(pause_time);
+}
 fn read_input(prompt: &str) -> String {
     print!("{}", prompt);
     io::stdout().flush().unwrap(); // Ensure the prompt is printed before reading input
@@ -315,17 +392,12 @@ fn hex_to_binary(input: &str) -> Result<String, &'static str> {
 }
 
 fn ascii_to_hex(input: &str) -> String {
-    input.as_bytes()
-         .iter()
-         .map(|b| format!("{:02x}", b))
-         .collect::<Vec<String>>()
-         .join(" ")
-}
-
-
-fn create_md5_hash(input: &str) -> String {
-    let digest = md5::compute(input);
-    format!("{:x}", digest)
+    input
+        .as_bytes()
+        .iter()
+        .map(|b| format!("{:02x}", b))
+        .collect::<Vec<String>>()
+        .join(" ")
 }
 
 fn Rotation(ciphertext: &str, shift: u8) -> String {
@@ -343,8 +415,30 @@ fn Rotation(ciphertext: &str, shift: u8) -> String {
         })
         .collect()
 }
-fn random_char_between_a_and_e() -> char {
-    let characters = ['a', 'b', 'c', 'd', 'e'];
-    let mut rng = rand::thread_rng();
-    characters[rng.gen_range(0..characters.len())]
+fn url_encode(input: &str) -> String {
+    urlencoding::encode(input)
+}
+
+fn url_decode(input: &str) -> Result<String, &'static str> {
+    urlencoding::decode(input).map_err(|_| "Failed to decode URL")
+}
+fn string_to_charcodes(input: &str) -> String {
+    input
+        .chars()
+        .map(|c| c as u32) // Convert char to Unicode code point
+        .map(|code| code.to_string())
+        .collect::<Vec<String>>()
+        .join(" ")
+}
+fn charcodes_to_string(input: &str) -> Result<String, String> {
+    input
+        .split_whitespace()
+        .map(|code| {
+            code.parse::<u32>()
+                .map_err(|_| "Invalid input".to_string())
+                .and_then(|code| {
+                    std::char::from_u32(code).ok_or_else(|| "Invalid charcode".to_string())
+                })
+        })
+        .collect()
 }
