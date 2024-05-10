@@ -1,1 +1,1 @@
-Fuck CyberChef
+Cyberchef has 0 Michelin stars.
