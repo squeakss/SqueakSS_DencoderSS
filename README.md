@@ -2,9 +2,11 @@ Squeakss_Dencoders is a versatile data encoding and decoding library designed to
 
 Features
 Multiple Encoding Formats: Supports a variety of encoding formats including Base64, Hex, and URL encoding.
+
 Efficient Decoding: Quickly and accurately decodes data from multiple formats back to its original form.
+
 User-Friendly API: Easy-to-use functions for both encoding and decoding tasks.
-Robust Error Handling: Comprehensive error handling to ensure smooth data conversion.
+
 
 
 
