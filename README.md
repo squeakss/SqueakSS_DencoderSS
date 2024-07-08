@@ -6,8 +6,6 @@ Efficient Decoding: Quickly and accurately decodes data from multiple formats ba
 User-Friendly API: Easy-to-use functions for both encoding and decoding tasks.
 Robust Error Handling: Comprehensive error handling to ensure smooth data conversion.
 
-Usage
-To use Squeakss_Dencoders, simply import the library and call the appropriate functions for encoding and decoding your data.
 
 
 
