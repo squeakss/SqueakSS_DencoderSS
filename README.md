@@ -1,4 +1,4 @@
-dencoders is a versatile data encoding and decoding library designed to simplify the process of converting data between various formats. Whether you need to encode data for secure transmission or decode data received from various sources.
+Dencoders is a versatile data encoding and decoding library designed to simplify the process of converting data between various formats. Whether you need to encode data for secure transmission or decode data received from various sources.
 
 
 
