@@ -1,5 +1,5 @@
 use base64::{decode, encode};
-use std::fs;
+use data_encoding::{BASE32, BASE32_NOPAD};
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
@@ -68,6 +68,8 @@ fn main() {
     println!("10: URL decode");
     println!("11: Charcode encode");
     println!("12: Charcode decode");
+    println!("13: ASCII to Base32");
+    println!("14: Base32 to ASCII");
     println!("Rot: Rotate a-z 1-25 times");
     println!("-----------------------------");
     println!("help: Syntax example");
@@ -216,6 +218,37 @@ fn main() {
                 println!("___________________________________________________________________________________________");
                 println!();
             }
+            "s13" => {
+                println!();
+                let input = read_input("Enter the ASCII string to encode to Base32: ");
+                match ascii_to_base32(&input) {
+                    Ok(encoded) => println_with_padding(&format!("Encoded: {}", encoded)),
+                    Err(e) => println_with_padding(&format!("Error: {}", e)),
+                }
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "s14" => {
+                println!();
+                let input = read_input("Enter the Base32 string to decode into ASCII: ");
+                match base32_to_ascii(&input) {
+                    Ok(decoded) => println_with_padding(&format!("Decoded: {}", decoded)),
+                    Err(e) => println_with_padding(&format!("Error: {}", e)),
+                }
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
+            "sRot" => {
+                println!();
+                let input = read_input("Enter the string to rotate: ");
+                println!();
+                for shift in 1..=25 {
+                    let rotated = rotate(&input, shift);
+                    println!("Shift {}: {}", shift, rotated);
+                }
+                println!("___________________________________________________________________________________________");
+                println!();
+            }
             "l1" => process_file_module("Enter the file path:", ascii_to_base64),
             "l2" => process_file_module("Enter the file path:", base64_to_ascii),
             "l3" => process_file_module("Enter the file path:", ascii_to_binary),
@@ -228,6 +261,8 @@ fn main() {
             "l10" => process_file_module("Enter the file path:", url_decode_wrapper),
             "l11" => process_file_module("Enter the file path:", string_to_charcodes),
             "l12" => process_file_module("Enter the file path:", charcodes_to_string_wrapper),
+            "l13" => process_file_module("Enter the file path:", ascii_to_base32),
+            "l14" => process_file_module("Enter the file path:", base32_to_ascii),
             "exit" => {
                 println!();
                 println_with_padding("Exiting...");
@@ -447,4 +482,32 @@ fn charcodes_to_string(input: &str) -> Result<String, &'static str> {
 
 fn charcodes_to_string_wrapper(input: &str) -> Result<String, &'static str> {
     charcodes_to_string(input).map_err(|_| "Failed to convert charcodes to string")
+}
+
+fn ascii_to_base32(input: &str) -> Result<String, &'static str> {
+    Ok(BASE32.encode(input.as_bytes()))
+}
+
+fn base32_to_ascii(input: &str) -> Result<String, &'static str> {
+    BASE32
+        .decode(input.as_bytes())
+        .map_err(|_| "Failed to decode Base32")
+        .and_then(|bytes| String::from_utf8(bytes).map_err(|_| "Failed to convert bytes to ASCII"))
+}
+
+fn rotate(input: &str, shift: u8) -> String {
+    input
+        .chars()
+        .map(|c| {
+            if c.is_ascii_lowercase() {
+                let offset = (c as u8 - b'a' + shift) % 26;
+                (b'a' + offset) as char
+            } else if c.is_ascii_uppercase() {
+                let offset = (c as u8 - b'A' + shift) % 26;
+                (b'A' + offset) as char
+            } else {
+                c
+            }
+        })
+        .collect()
 }
