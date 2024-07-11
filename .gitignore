@@ -1,1 +1,6 @@
 /target
+.vs/
+node_modules/
+dist/
+*.log
+.env
